@@ -112,12 +112,12 @@ draw_rectangle() {
 	
 	if [[ $(($width+x)) -ge KARANDASH_WIDTH ]];
 	then
-		width=$((KARANDASH_WIDTH-x-1))
+		width=$((KARANDASH_WIDTH-x))
 	fi
 	
 	if [[ $(($height+y)) -ge KARANDASH_HEIGHT ]];
 	then
-		height=$((KARANDASH_HEIGHT-y-1))
+		height=$((KARANDASH_HEIGHT-y))
 	fi
 	
 	for (( dy=0; dy<height; dy++ ))
