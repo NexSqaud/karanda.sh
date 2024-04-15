@@ -75,7 +75,7 @@ draw_pixel() {
 		return 0
 	fi
 	
-	KARANDASH_CANVAS[$(($y*KARANDASH_WIDTH+$y))]=color
+	KARANDASH_CANVAS[$(($y*KARANDASH_WIDTH+$x))]=$color
 }
 
 # Arguments:
