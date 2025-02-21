@@ -62,4 +62,5 @@ done
 
 echo "[Voronoi] Saving to PPM..."
 
-save_to_ppm "voronoi.ppm"
+convert_to_ppm > "/dev/shm/voronoi.ppm"
+mv /dev/shm/voronoi.ppm voronoi.ppm

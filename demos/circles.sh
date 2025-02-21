@@ -30,4 +30,5 @@ done
 
 echo "[Circles] Saving to \"circles.ppm\"..."
 
-save_to_ppm "circles.ppm"
+convert_to_ppm > "/dev/shm/circles.ppm"
+mv /dev/shm/circles.ppm circles.ppm

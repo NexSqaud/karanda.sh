@@ -431,6 +431,19 @@ draw_image() {
 
 # Arguments:
 # 	< Stream inputFile
+# 	> Stream sizeTuple
+get_raw_image_size() {
+	local width=0
+	local height=0
+	
+	read32 width
+	read32 height
+	
+	echo "$width $height"
+}
+
+# Arguments:
+# 	< Stream inputFile
 # 	> Stream buffer
 # Output: 0 if success; 1 on error
 load_raw_image_from_stream() {
@@ -448,6 +461,19 @@ load_raw_image_from_stream() {
 		read32 pixel
 		buffer[$i]=$pixel
 	done
+	
+	echo ${buffer[@]}
+}
+
+# Arguments:
+# 	String filename
+# 	> Stream buffer
+load_raw_image_with_od() {
+	local filename=$1
+
+	declare -a buffer
+	
+	IFS=$' ' read -a buffer <<<$(od -An -v -t u4 -j 8 $filename | tr '\n' ' ')
 	
 	echo ${buffer[@]}
 }
@@ -490,6 +516,29 @@ save_to_ppm() {
 }
 
 # Arguments:
+# > Stream ppm_output
+# Note: recomended to redirect to file in /dev/shm/
+convert_to_ppm() {
+	echo "P3"
+	echo "$KARANDASH_WIDTH $KARANDASH_HEIGHT"
+	echo "255"
+	echo ""
+	
+	for (( y=0; y<KARANDASH_HEIGHT; y++ ))
+	do 
+		for (( x=0; x<KARANDASH_WIDTH; x++ ))
+		do
+			local pixelIndex=$(($y*KARANDASH_WIDTH+$x))
+			local r=$((KARANDASH_CANVAS[$pixelIndex] & 0xFF))
+			local g=$((KARANDASH_CANVAS[$pixelIndex]>>8 & 0xFF))
+			local b=$((KARANDASH_CANVAS[$pixelIndex]>>16 & 0xFF))
+			
+			echo "$r $g $b"
+		done
+	done
+}
+
+# Arguments:
 # 	int x1
 # 	int y1
 # 	int x2
@@ -503,7 +552,7 @@ save_to_ppm() {
 # 	int& det
 # 	bool& inside
 # Output: 0 on success; 1 on error
-# u3 = det - u1 - u2
+# Note: u3 = det - u1 - u2
 barycentric() {
 	local x1=$1
 	local y1=$2
@@ -517,10 +566,10 @@ barycentric() {
 	local x=$7
 	local y=$8
 	
-	local output_u1=$9
-	local output_u2=${10}
-	local output_det=${11}
-	local output_inside=${12}
+	local -n output_u1=$9
+	local -n output_u2=${10}
+	local -n output_det=${11}
+	local -n output_inside=${12}
 	
 	local _det=$(( (($x1-$x3)*($y2-$y3) - ($x2-$x3)*($y1-$y3)) ))
 	local _u1=$(( (($y2-$y3)*($x-$x3) + ($x3-$x2)*($y-$y3)) ))
@@ -543,10 +592,10 @@ barycentric() {
 		_inside=1
 	fi
 	
-	write_int_value $output_u1 $_u1
-	write_int_value $output_u2 $_u2
-	write_int_value $output_det $_det
-	write_int_value $output_inside $_inside
+	output_u1=$_u1
+	output_u2=$_u2
+	output_det=$_det
+	output_inside=$_inside
 }
 
 # Arguments:
@@ -570,11 +619,11 @@ clamp_triangle_on_canvas() {
 	local x3=$5
 	local y3=$6
 	
-	local output_minX=$7
-	local output_maxX=$8
-	local output_minY=$9
-	local output_maxY=${10}
-	local output_insideCanvas=${11}
+	local -n output_minX=$7
+	local -n output_maxX=$8
+	local -n output_minY=$9
+	local -n output_maxY=${10}
+	local -n output_insideCanvas=${11}
 	
 	local _minX=$x1
 	local _maxX=$x1
@@ -646,13 +695,13 @@ clamp_triangle_on_canvas() {
 	
 	if [[ $_minY -ge $KARANDASH_HEIGHT ]];
 	then
-		write_int_value $output_insideCanvas 0
+		output_insideCanvas=0
 		return 0
 	fi
 	
 	if [[ $_maxY -lt 0 ]];
 	then
-		write_int_value $output_insideCanvas 0
+		output_insideCanvas=0
 		return 0
 	fi
 	
@@ -661,11 +710,11 @@ clamp_triangle_on_canvas() {
 		maxX=$(($KARANDASH_HEIGHT-1))
 	fi
 	
-	write_int_value $output_minX $_minX
-	write_int_value $output_maxX $_maxX
-	write_int_value $output_minY $_minY
-	write_int_value $output_maxY $_maxY
-	write_int_value $output_insideCanvas 1
+	output_minX=$_minX
+	output_maxX=$_maxX
+	output_minY=$_minY
+	output_maxY=$_maxY
+	output_insideCanvas=1
 }
 
 # Arguments:
@@ -674,9 +723,7 @@ clamp_triangle_on_canvas() {
 # Output: 0 on success; 1 on error
 get_sign() {
 	local number=$1
-	local output_sign=$2
-	
-	local sign=0
+	local -n sign=$2
 	
 	if [[ $number -lt 0 ]];
 	then
@@ -687,16 +734,6 @@ get_sign() {
 	then
 		sign=1
 	fi
-	
-	write_int_value $output_sign $sign
-}
-
-# Arguments:
-# 	int& var
-# 	int value
-# Output: 0 on success; 1 on error
-write_int_value() {
-	printf -v $1 %d $2
 }
 
 #

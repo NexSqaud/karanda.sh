@@ -17,4 +17,5 @@ draw_line 700 0 100 600 0xFF00FFFF
 
 echo "[Lines] Saving to \"lines.ppm\"..."
 
-save_to_ppm "lines.ppm"
+convert_to_ppm > "/dev/shm/lines.ppm"
+mv /dev/shm/lines.ppm lines.ppm

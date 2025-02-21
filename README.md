@@ -57,3 +57,7 @@ To run demos, just run `demos.sh`
 ![rectangles](images/rectangles.png)
 
 ![voronoi](images/voronoi.png)
+
+![texture](images/texture.png)
+
+![3d](images/3d.png)

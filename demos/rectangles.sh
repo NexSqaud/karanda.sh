@@ -24,4 +24,5 @@ done
 
 echo "[Rectangles] Saving to \"rectangles.ppm\"..."
 
-save_to_ppm "rectangles.ppm"
+convert_to_ppm > "/dev/shm/rectangles.ppm"
+mv /dev/shm/rectangles.ppm rectangles.ppm
